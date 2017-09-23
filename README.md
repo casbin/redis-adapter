@@ -1,4 +1,4 @@
-Redis Adapter [![Godoc](https://godoc.org/github.com/casbin/redis-adapter?status.svg)](https://godoc.org/github.com/casbin/redis-adapter)
+Redis Adapter [![Build Status](https://travis-ci.org/casbin/redis-adapter.svg?branch=master)](https://travis-ci.org/casbin/redis-adapter) [![Coverage Status](https://coveralls.io/repos/github/casbin/redis-adapter/badge.svg?branch=master)](https://coveralls.io/github/casbin/redis-adapter?branch=master) [![Godoc](https://godoc.org/github.com/casbin/redis-adapter?status.svg)](https://godoc.org/github.com/casbin/redis-adapter)
 ====
 
 Redis Adapter is the [Redis](https://redis.io/) adapter for [Casbin](https://github.com/casbin/casbin). With this library, Casbin can load policy from Redis or save policy to it.
