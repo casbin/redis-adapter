@@ -38,7 +38,8 @@ type CasbinRule struct {
 type Adapter struct {
 	network string
 	address string
-	conn redis.Conn
+	key     string
+	conn    redis.Conn
 }
 
 // finalizer is the destructor for Adapter.
@@ -46,11 +47,11 @@ func finalizer(a *Adapter) {
 	a.conn.Close()
 }
 
-// NewAdapter is the constructor for Adapter.
-func NewAdapter(network string, address string) *Adapter {
+func newAdapter(network, address, key string) *Adapter {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
+	a.key = key
 
 	// Open the DB, create it if not existed.
 	a.open()
@@ -59,6 +60,16 @@ func NewAdapter(network string, address string) *Adapter {
 	runtime.SetFinalizer(a, finalizer)
 
 	return a
+}
+
+// NewAdapter is the constructor for Adapter.
+func NewAdapter(network string, address string) *Adapter {
+	return newAdapter(network, address, "casbin_rules")
+}
+
+// NewRedisAdapter is the constructor for Adapter.
+func NewRedisAdapter(network, address, key string) *Adapter {
+	return newAdapter(network, address, key)
 }
 
 func (a *Adapter) open() {
@@ -107,7 +118,7 @@ func loadPolicyLine(line CasbinRule, model model.Model) {
 
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(model model.Model) error {
-	text, err := redis.String(a.conn.Do("GET", "casbin_rules"))
+	text, err := redis.String(a.conn.Do("GET", a.key))
 	if err != nil {
 		return err
 	}
@@ -177,7 +188,7 @@ func (a *Adapter) SavePolicy(model model.Model) error {
 		return err
 	}
 
-	_, err = a.conn.Do("SET", "casbin_rules", text)
+	_, err = a.conn.Do("SET", a.key, text)
 	return err
 }
 
