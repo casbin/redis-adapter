@@ -21,9 +21,10 @@ import (
 
 	"github.com/casbin/casbin/model"
 	"github.com/casbin/casbin/persist"
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
+// CasbinRule is used to determine which policy line to load.
 type CasbinRule struct {
 	PType string `xorm:"varchar(100) index"`
 	V0    string `xorm:"varchar(100) index"`
