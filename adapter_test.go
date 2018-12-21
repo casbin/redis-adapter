@@ -37,6 +37,12 @@ func TestAdapter(t *testing.T) {
 	e := casbin.NewEnforcer("examples/rbac_model.conf", "examples/rbac_policy.csv")
 
 	a := NewAdapter("tcp", "127.0.0.1:6379")
+	t.Run("Read the policies from an empty redis", func(t *testing.T) {
+		if err := a.LoadPolicy(e.GetModel()); err != nil {
+			t.Error("Should not return an error")
+		}
+	})
+
 	// This is a trick to save the current policy to the DB.
 	// We can't call e.SavePolicy() because the adapter in the enforcer is still the file adapter.
 	// The current policy means the policy in the Casbin enforcer (aka in memory).
