@@ -120,10 +120,12 @@ func loadPolicyLine(line CasbinRule, model model.Model) {
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(model model.Model) error {
 	text, err := redis.String(a.conn.Do("GET", a.key))
+	if err == redis.ErrNil {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
-
 	var lines []CasbinRule
 	err = json.Unmarshal([]byte(text), &lines)
 	if err != nil {
