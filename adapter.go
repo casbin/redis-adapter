@@ -37,10 +37,11 @@ type CasbinRule struct {
 
 // Adapter represents the Redis adapter for policy storage.
 type Adapter struct {
-	network string
-	address string
-	key     string
-	conn    redis.Conn
+	network  string
+	address  string
+	key      string
+	password string
+	conn     redis.Conn
 }
 
 // finalizer is the destructor for Adapter.
@@ -48,11 +49,12 @@ func finalizer(a *Adapter) {
 	a.conn.Close()
 }
 
-func newAdapter(network string, address string, key string) *Adapter {
+func newAdapter(network string, address string, key string, password string) *Adapter {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
 	a.key = key
+	a.password = password
 
 	// Open the DB, create it if not existed.
 	a.open()
@@ -65,22 +67,36 @@ func newAdapter(network string, address string, key string) *Adapter {
 
 // NewAdapter is the constructor for Adapter.
 func NewAdapter(network string, address string) *Adapter {
-	return newAdapter(network, address, "casbin_rules")
+	return newAdapter(network, address, "casbin_rules", "")
+}
+
+// NewAdapterWithPassword is the constructor for Adapter.
+func NewAdapterWithPassword(network string, address string, password string) *Adapter {
+	return newAdapter(network, address, "casbin_rules", password)
 }
 
 // NewAdapterWithKey is the constructor for Adapter.
 func NewAdapterWithKey(network string, address string, key string) *Adapter {
-	return newAdapter(network, address, key)
+	return newAdapter(network, address, key, "")
 }
 
 func (a *Adapter) open() {
 	//redis.Dial("tcp", "127.0.0.1:6379")
-	conn, err := redis.Dial(a.network, a.address)
-	if err != nil {
-		panic(err)
-	}
+	if a.password == "" {
+		conn, err := redis.Dial(a.network, a.address)
+		if err != nil {
+			panic(err)
+		}
 
-	a.conn = conn
+		a.conn = conn
+	} else {
+		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password))
+		if err != nil {
+			panic(err)
+		}
+
+		a.conn = conn
+	}
 }
 
 func (a *Adapter) close() {
