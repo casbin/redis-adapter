@@ -48,7 +48,7 @@ func finalizer(a *Adapter) {
 	a.conn.Close()
 }
 
-func newAdapter(network, address, key string) *Adapter {
+func newAdapter(network string, address string, key string) *Adapter {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
@@ -68,8 +68,8 @@ func NewAdapter(network string, address string) *Adapter {
 	return newAdapter(network, address, "casbin_rules")
 }
 
-// NewRedisAdapter is the constructor for Adapter.
-func NewRedisAdapter(network, address, key string) *Adapter {
+// NewAdapterWithKey is the constructor for Adapter.
+func NewAdapterWithKey(network string, address string, key string) *Adapter {
 	return newAdapter(network, address, key)
 }
 
