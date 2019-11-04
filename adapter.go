@@ -41,6 +41,7 @@ type Adapter struct {
 	address  string
 	key      string
 	password string
+	db       int
 	conn     redis.Conn
 }
 
@@ -49,12 +50,13 @@ func finalizer(a *Adapter) {
 	a.conn.Close()
 }
 
-func newAdapter(network string, address string, key string, password string) *Adapter {
+func newAdapter(network string, address string, key string, password string, db int) *Adapter {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
 	a.key = key
 	a.password = password
+	a.db = db
 
 	// Open the DB, create it if not existed.
 	a.open()
@@ -67,30 +69,35 @@ func newAdapter(network string, address string, key string, password string) *Ad
 
 // NewAdapter is the constructor for Adapter.
 func NewAdapter(network string, address string) *Adapter {
-	return newAdapter(network, address, "casbin_rules", "")
+	return newAdapter(network, address, "casbin_rules", "", 0)
 }
 
 // NewAdapterWithPassword is the constructor for Adapter.
 func NewAdapterWithPassword(network string, address string, password string) *Adapter {
-	return newAdapter(network, address, "casbin_rules", password)
+	return newAdapter(network, address, "casbin_rules", password, 0)
 }
 
 // NewAdapterWithKey is the constructor for Adapter.
 func NewAdapterWithKey(network string, address string, key string) *Adapter {
-	return newAdapter(network, address, key, "")
+	return newAdapter(network, address, key, "", 0)
+}
+
+// NewAdapterWithOptions support specifies the database to select
+func NewAdapterWithOptions(network, address, key, password string, db int) *Adapter {
+	return newAdapter(network, address, key, password, db)
 }
 
 func (a *Adapter) open() {
 	//redis.Dial("tcp", "127.0.0.1:6379")
 	if a.password == "" {
-		conn, err := redis.Dial(a.network, a.address)
+		conn, err := redis.Dial(a.network, a.address, redis.DialDatabase(a.db))
 		if err != nil {
 			panic(err)
 		}
 
 		a.conn = conn
 	} else {
-		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password))
+		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password), redis.DialDatabase(a.db))
 		if err != nil {
 			panic(err)
 		}
