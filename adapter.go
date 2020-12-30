@@ -213,7 +213,24 @@ func (a *Adapter) SavePolicy(model model.Model) error {
 
 // AddPolicy adds a policy rule to the storage.
 func (a *Adapter) AddPolicy(sec string, ptype string, rule []string) error {
-	return errors.New("not implemented")
+	line := savePolicyLine(ptype, rule)
+	text, err := redis.String(a.conn.Do("GET", a.key))
+	var lines []CasbinRule
+	if err == redis.ErrNil {
+		return a.addPolicy(lines, line)
+	}
+	if err != nil {
+		return err
+	}
+	_, err = a.conn.Do("DEL", a.key)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal([]byte(text), &lines)
+	if err != nil {
+		return err
+	}
+	return a.addPolicy(lines, line)
 }
 
 // RemovePolicy removes a policy rule from the storage.
@@ -223,5 +240,54 @@ func (a *Adapter) RemovePolicy(sec string, ptype string, rule []string) error {
 
 // RemoveFilteredPolicy removes policy rules that match the filter from the storage.
 func (a *Adapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int, fieldValues ...string) error {
+	return errors.New("not implemented")
+}
+
+func (a *Adapter) addPolicy(lines []CasbinRule, line CasbinRule) error {
+	lines = append(lines, line)
+	newText, err := json.Marshal(lines)
+	if err != nil {
+		return err
+	}
+	_, err = a.conn.Do("SET", a.key, newText)
+	return err
+}
+
+// AddPolicies adds policy rules to the storage.
+func (a *Adapter) AddPolicies(sec string, ptype string, rules [][]string) error {
+	var lines []CasbinRule
+	text, err := redis.String(a.conn.Do("GET", a.key))
+	if err == redis.ErrNil {
+		return a.addPolicies(ptype, lines, rules)
+	}
+	if err != nil {
+		return err
+	}
+	_, err = a.conn.Do("DEL", a.key)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal([]byte(text), &lines)
+	if err != nil {
+		return err
+	}
+	return a.addPolicies(ptype, lines, rules)
+}
+
+func (a *Adapter) addPolicies(ptype string, lines []CasbinRule, rules [][]string) error {
+	for _, rule := range rules {
+		line := savePolicyLine(ptype, rule)
+		lines = append(lines, line)
+	}
+	newText, err := json.Marshal(lines)
+	if err != nil {
+		return err
+	}
+	_, err = a.conn.Do("SET", a.key, newText)
+	return err
+}
+
+// RemovePolicies removes policy rules from the storage.
+func (a *Adapter) RemovePolicies(sec string, ptype string, rules [][]string) error {
 	return errors.New("not implemented")
 }
