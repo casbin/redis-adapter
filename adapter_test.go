@@ -71,4 +71,27 @@ func TestAdapter(t *testing.T) {
 
 	e, _ = casbin.NewEnforcer("examples/rbac_model.conf", a)
 	testGetPolicy(t, e, [][]string{{"alice", "data1", "read"}, {"bob", "data2", "write"}, {"data2_admin", "data2", "read"}, {"data2_admin", "data2", "write"}})
+
+	// Add one policy to DB
+	a.AddPolicy("p", "p", []string{"paul", "data2", "read"})
+	e.ClearPolicy()
+	a.LoadPolicy(e.GetModel())
+	testGetPolicy(t, e, [][]string{{"alice", "data1", "read"}, {"bob", "data2", "write"}, {"data2_admin", "data2", "read"}, {"data2_admin", "data2", "write"}, {"paul", "data2", "read"}})
+
+	// Add policies to DB
+	a.AddPolicies("p", "p", [][]string{
+		{"curry", "data1", "write"},
+		{"kobe", "data2", "read"},
+	})
+	e.ClearPolicy()
+	a.LoadPolicy(e.GetModel())
+	testGetPolicy(t, e, [][]string{
+		{"alice", "data1", "read"},
+		{"bob", "data2", "write"},
+		{"data2_admin", "data2", "read"},
+		{"data2_admin", "data2", "write"},
+		{"paul", "data2", "read"},
+		{"curry", "data1", "write"},
+		{"kobe", "data2", "read"},
+	})
 }
