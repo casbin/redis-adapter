@@ -135,20 +135,28 @@ func loadPolicyLine(line CasbinRule, model model.Model) {
 
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(model model.Model) error {
-	text, err := redis.String(a.conn.Do("GET", a.key))
+	num, err := redis.Int(a.conn.Do("LLEN", a.key))
 	if err == redis.ErrNil {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	var lines []CasbinRule
-	err = json.Unmarshal([]byte(text), &lines)
+	values, err := redis.Values(a.conn.Do("LRANGE", a.key, 0, num))
 	if err != nil {
 		return err
 	}
 
-	for _, line := range lines {
+	var line CasbinRule
+	for _, value := range values {
+		text, ok := value.([]byte)
+		if !ok {
+			return errors.New("the type is wrong")
+		}
+		err = json.Unmarshal(text, &line)
+		if err != nil {
+			return err
+		}
 		loadPolicyLine(line, model)
 	}
 
@@ -186,56 +194,54 @@ func (a *Adapter) SavePolicy(model model.Model) error {
 	a.dropTable()
 	a.createTable()
 
-	var lines []CasbinRule
+	var texts [][]byte
 
 	for ptype, ast := range model["p"] {
 		for _, rule := range ast.Policy {
 			line := savePolicyLine(ptype, rule)
-			lines = append(lines, line)
+			text, err := json.Marshal(line)
+			if err != nil {
+				return err
+			}
+			texts = append(texts, text)
 		}
 	}
 
 	for ptype, ast := range model["g"] {
 		for _, rule := range ast.Policy {
 			line := savePolicyLine(ptype, rule)
-			lines = append(lines, line)
+			text, err := json.Marshal(line)
+			if err != nil {
+				return err
+			}
+			texts = append(texts, text)
 		}
 	}
 
-	text, err := json.Marshal(lines)
-	if err != nil {
-		return err
-	}
-
-	_, err = a.conn.Do("SET", a.key, text)
+	_, err := a.conn.Do("RPUSH", redis.Args{}.Add(a.key).AddFlat(texts)...)
 	return err
 }
 
 // AddPolicy adds a policy rule to the storage.
 func (a *Adapter) AddPolicy(sec string, ptype string, rule []string) error {
 	line := savePolicyLine(ptype, rule)
-	text, err := redis.String(a.conn.Do("GET", a.key))
-	var lines []CasbinRule
-	if err == redis.ErrNil {
-		return a.addPolicy(lines, line)
-	}
+	text, err := json.Marshal(line)
 	if err != nil {
 		return err
 	}
-	_, err = a.conn.Do("DEL", a.key)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal([]byte(text), &lines)
-	if err != nil {
-		return err
-	}
-	return a.addPolicy(lines, line)
+	_, err = a.conn.Do("RPUSH", a.key, text)
+	return err
 }
 
 // RemovePolicy removes a policy rule from the storage.
 func (a *Adapter) RemovePolicy(sec string, ptype string, rule []string) error {
-	return errors.New("not implemented")
+	line := savePolicyLine(ptype, rule)
+	text, err := json.Marshal(line)
+	if err != nil {
+		return err
+	}
+	_, err = a.conn.Do("LREM", a.key, 1, text)
+	return err
 }
 
 // RemoveFilteredPolicy removes policy rules that match the filter from the storage.
@@ -243,51 +249,33 @@ func (a *Adapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int,
 	return errors.New("not implemented")
 }
 
-func (a *Adapter) addPolicy(lines []CasbinRule, line CasbinRule) error {
-	lines = append(lines, line)
-	newText, err := json.Marshal(lines)
-	if err != nil {
-		return err
-	}
-	_, err = a.conn.Do("SET", a.key, newText)
-	return err
-}
-
 // AddPolicies adds policy rules to the storage.
 func (a *Adapter) AddPolicies(sec string, ptype string, rules [][]string) error {
-	var lines []CasbinRule
-	text, err := redis.String(a.conn.Do("GET", a.key))
-	if err == redis.ErrNil {
-		return a.addPolicies(ptype, lines, rules)
-	}
-	if err != nil {
-		return err
-	}
-	_, err = a.conn.Do("DEL", a.key)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal([]byte(text), &lines)
-	if err != nil {
-		return err
-	}
-	return a.addPolicies(ptype, lines, rules)
-}
-
-func (a *Adapter) addPolicies(ptype string, lines []CasbinRule, rules [][]string) error {
+	var texts [][]byte
 	for _, rule := range rules {
 		line := savePolicyLine(ptype, rule)
-		lines = append(lines, line)
+		text, err := json.Marshal(line)
+		if err != nil {
+			return err
+		}
+		texts = append(texts, text)
 	}
-	newText, err := json.Marshal(lines)
-	if err != nil {
-		return err
-	}
-	_, err = a.conn.Do("SET", a.key, newText)
+	_, err := a.conn.Do("RPUSH", redis.Args{}.Add(a.key).AddFlat(texts)...)
 	return err
 }
 
 // RemovePolicies removes policy rules from the storage.
 func (a *Adapter) RemovePolicies(sec string, ptype string, rules [][]string) error {
-	return errors.New("not implemented")
+	for _, rule := range rules {
+		line := savePolicyLine(ptype, rule)
+		text, err := json.Marshal(line)
+		if err != nil {
+			return err
+		}
+		_, err = a.conn.Do("LREM", a.key, 1, text)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
