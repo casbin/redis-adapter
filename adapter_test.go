@@ -37,9 +37,10 @@ func TestAdapter(t *testing.T) {
 	// so we need to load the policy from the file adapter (.CSV) first.
 	e, _ := casbin.NewEnforcer("examples/rbac_model.conf", "examples/rbac_policy.csv")
 
-	a := NewAdapter("tcp", "127.0.0.1:6379")
+	//a := NewAdapter("tcp", "127.0.0.1:6379")
 	// Use the following if Redis has password like "123"
 	//a := NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
+	a := NewAdapterWithOption(WithAddress("127.0.0.1:6379"), WithPassword("123"))
 	t.Run("Read the policies from an empty redis", func(t *testing.T) {
 		if err := a.LoadPolicy(e.GetModel()); err != nil {
 			t.Error("Should not return an error")
@@ -65,7 +66,7 @@ func TestAdapter(t *testing.T) {
 	// Now the DB has policy, so we can provide a normal use case.
 	// Create an adapter and an enforcer.
 	// NewEnforcer() will load the policy automatically.
-	a = NewAdapter("tcp", "127.0.0.1:6379")
+	a = NewAdapterWithOption(WithAddress("127.0.0.1:6379"), WithPassword("123"))
 	// Use the following if Redis has password like "123"
 	//a := NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
 

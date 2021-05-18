@@ -4,7 +4,7 @@ Redis Adapter is the [Redis](https://redis.io/) adapter for [Casbin](https://git
 
 ## Installation
 
-    go get github.com/casbin/redis-adapter
+    go get github.com/casbin/redis-adapter/v2
 
 ## Simple Example
 
@@ -18,10 +18,12 @@ import (
 
 func main() {
 	// Initialize a Redis adapter and use it in a Casbin enforcer:
-	a := redisadapter.NewAdapter("tcp", "127.0.0.1:6379") // Your Redis network and address.
-	// Use the following if Redis has password like "123"
-    //a := redisadapter.NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
-	e := casbin.NewEnforcer("examples/rbac_model.conf", a)
+	//a := redisadapter.NewAdapter("tcp", "127.0.0.1:6379") // Your Redis network and address.
+	// Use the following if Redis has password like "123" 
+	//a := redisadapter.NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123") 
+	// Initialize by Options Pattern
+	a := redisadapter.NewAdapterWithOption(redisadapter.WithNetwork("tcp"),redisadapter.WithAddress("127.0.0.1:6379"))
+	e,_ := casbin.NewEnforcer("examples/rbac_model.conf", a)
 
 	// Load the policy from DB.
 	e.LoadPolicy()
