@@ -4,7 +4,7 @@ Redis Adapter is the [Redis](https://redis.io/) adapter for [Casbin](https://git
 
 ## Installation
 
-    go get github.com/casbin/redis-adapter
+    go get github.com/casbin/redis-adapter/v2
 
 ## Simple Example
 
