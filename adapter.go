@@ -80,6 +80,45 @@ func NewAdapterWithKey(network string, address string, key string) *Adapter {
 	return newAdapter(network, address, key, "")
 }
 
+type Option func(*Adapter)
+
+func NewAdpaterWithOption(options ...Option) *Adapter {
+	a := &Adapter{}
+	for _, option := range options {
+		option(a)
+	}
+	// Open the DB, create it if not existed.
+	a.open()
+
+	// Call the destructor when the object is released.
+	runtime.SetFinalizer(a, finalizer)
+
+	return a
+}
+
+func WithAddress(address string) Option {
+	return func(a *Adapter) {
+		a.address = address
+	}
+}
+
+func WithPassword(password string) Option {
+	return func(a *Adapter) {
+		a.password = password
+	}
+}
+
+func WithNetwork(network string) Option {
+	return func(a *Adapter) {
+		a.network = network
+	}
+}
+func WithKey(key string) Option {
+	return func(a *Adapter) {
+		a.key = key
+	}
+}
+
 func (a *Adapter) open() {
 	//redis.Dial("tcp", "127.0.0.1:6379")
 	if a.password == "" {
