@@ -149,27 +149,27 @@ func (a *Adapter) dropTable() {
 }
 
 func loadPolicyLine(line CasbinRule, model model.Model) {
-	lineText := line.PType
+	text := []string{line.PType}
 	if line.V0 != "" {
-		lineText += ", " + line.V0
+		text = append(text, line.V0)
 	}
 	if line.V1 != "" {
-		lineText += ", " + line.V1
+		text = append(text, line.V1)
 	}
 	if line.V2 != "" {
-		lineText += ", " + line.V2
+		text = append(text, line.V2)
 	}
 	if line.V3 != "" {
-		lineText += ", " + line.V3
+		text = append(text, line.V3)
 	}
 	if line.V4 != "" {
-		lineText += ", " + line.V4
+		text = append(text, line.V4)
 	}
 	if line.V5 != "" {
-		lineText += ", " + line.V5
+		text = append(text, line.V5)
 	}
 
-	persist.LoadPolicyLine(lineText, model)
+	persist.LoadPolicyArray(text, model)
 }
 
 // LoadPolicy loads policy from database.
