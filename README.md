@@ -19,8 +19,13 @@ import (
 func main() {
 	// Initialize a Redis adapter and use it in a Casbin enforcer:
 	a := redisadapter.NewAdapter("tcp", "127.0.0.1:6379") // Your Redis network and address.
+
 	// Use the following if Redis has password like "123"
-    //a := redisadapter.NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
+	//a := redisadapter.NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
+
+	// Use the following if you use Redis with a specific user 
+	// a := NewAdapterWithUser("tcp", "127.0.0.1:6379", "testaccount", "userpass")
+
 	e := casbin.NewEnforcer("examples/rbac_model.conf", a)
 
 	// Load the policy from DB.

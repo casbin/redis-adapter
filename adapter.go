@@ -44,6 +44,7 @@ type Adapter struct {
 	network    string
 	address    string
 	key        string
+	username   string
 	password   string
 	conn       redis.Conn
 	isFiltered bool
@@ -54,11 +55,13 @@ func finalizer(a *Adapter) {
 	a.conn.Close()
 }
 
-func newAdapter(network string, address string, key string, password string) *Adapter {
+func newAdapter(network string, address string, key string,
+	username string, password string) *Adapter {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
 	a.key = key
+	a.username = username
 	a.password = password
 
 	// Open the DB, create it if not existed.
@@ -72,17 +75,21 @@ func newAdapter(network string, address string, key string, password string) *Ad
 
 // NewAdapter is the constructor for Adapter.
 func NewAdapter(network string, address string) *Adapter {
-	return newAdapter(network, address, "casbin_rules", "")
+	return newAdapter(network, address, "casbin_rules", "", "")
+}
+
+func NewAdapterWithUser(network string, address string, username string, password string) *Adapter {
+	return newAdapter(network, address, "casbin_rules", username, password)
 }
 
 // NewAdapterWithPassword is the constructor for Adapter.
 func NewAdapterWithPassword(network string, address string, password string) *Adapter {
-	return newAdapter(network, address, "casbin_rules", password)
+	return newAdapter(network, address, "casbin_rules", "", password)
 }
 
 // NewAdapterWithKey is the constructor for Adapter.
 func NewAdapterWithKey(network string, address string, key string) *Adapter {
-	return newAdapter(network, address, key, "")
+	return newAdapter(network, address, key, "", "")
 }
 
 type Option func(*Adapter)
@@ -107,6 +114,12 @@ func WithAddress(address string) Option {
 	}
 }
 
+func WithUsername(username string) Option {
+	return func(a *Adapter) {
+		a.username = username
+	}
+}
+
 func WithPassword(password string) Option {
 	return func(a *Adapter) {
 		a.password = password
@@ -126,7 +139,14 @@ func WithKey(key string) Option {
 
 func (a *Adapter) open() {
 	//redis.Dial("tcp", "127.0.0.1:6379")
-	if a.password == "" {
+	if a.username != "" {
+		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password))
+		if err != nil {
+			panic(err)
+		}
+
+		a.conn = conn
+	} else if a.password == "" {
 		conn, err := redis.Dial(a.network, a.address)
 		if err != nil {
 			panic(err)
