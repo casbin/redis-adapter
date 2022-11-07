@@ -56,7 +56,7 @@ func finalizer(a *Adapter) {
 }
 
 func newAdapter(network string, address string, key string,
-	username string, password string) *Adapter {
+	username string, password string) (*Adapter, error) {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
@@ -65,47 +65,47 @@ func newAdapter(network string, address string, key string,
 	a.password = password
 
 	// Open the DB, create it if not existed.
-	a.open()
+	err := a.open()
 
 	// Call the destructor when the object is released.
 	runtime.SetFinalizer(a, finalizer)
 
-	return a
+	return a, err
 }
 
 // NewAdapter is the constructor for Adapter.
-func NewAdapter(network string, address string) *Adapter {
+func NewAdapter(network string, address string) (*Adapter, error) {
 	return newAdapter(network, address, "casbin_rules", "", "")
 }
 
-func NewAdapterWithUser(network string, address string, username string, password string) *Adapter {
+func NewAdapterWithUser(network string, address string, username string, password string) (*Adapter, error) {
 	return newAdapter(network, address, "casbin_rules", username, password)
 }
 
 // NewAdapterWithPassword is the constructor for Adapter.
-func NewAdapterWithPassword(network string, address string, password string) *Adapter {
+func NewAdapterWithPassword(network string, address string, password string) (*Adapter, error) {
 	return newAdapter(network, address, "casbin_rules", "", password)
 }
 
 // NewAdapterWithKey is the constructor for Adapter.
-func NewAdapterWithKey(network string, address string, key string) *Adapter {
+func NewAdapterWithKey(network string, address string, key string) (*Adapter, error) {
 	return newAdapter(network, address, key, "", "")
 }
 
 type Option func(*Adapter)
 
-func NewAdpaterWithOption(options ...Option) *Adapter {
+func NewAdpaterWithOption(options ...Option) (*Adapter, error) {
 	a := &Adapter{}
 	for _, option := range options {
 		option(a)
 	}
 	// Open the DB, create it if not existed.
-	a.open()
+	err := a.open()
 
 	// Call the destructor when the object is released.
 	runtime.SetFinalizer(a, finalizer)
 
-	return a
+	return a, err
 }
 
 func WithAddress(address string) Option {
@@ -137,30 +137,31 @@ func WithKey(key string) Option {
 	}
 }
 
-func (a *Adapter) open() {
+func (a *Adapter) open() error {
 	//redis.Dial("tcp", "127.0.0.1:6379")
 	if a.username != "" {
 		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password))
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		a.conn = conn
 	} else if a.password == "" {
 		conn, err := redis.Dial(a.network, a.address)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		a.conn = conn
 	} else {
 		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password))
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		a.conn = conn
 	}
+	return nil
 }
 
 func (a *Adapter) close() {
