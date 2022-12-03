@@ -21,6 +21,7 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/util"
+	"github.com/gomodule/redigo/redis"
 )
 
 func testGetPolicy(t *testing.T, e *casbin.Enforcer, res [][]string) {
@@ -356,10 +357,29 @@ func TestAdapters(t *testing.T) {
 	a, _ := NewAdapter("tcp", "127.0.0.1:6379")
 
 	// Use the following if Redis has password like "123"
-	//a, err := NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
+	// a, err := NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
 
 	// Use the following if you use Redis with a account
 	// a, err := NewAdapterWithUser("tcp", "127.0.0.1:6379", "testaccount", "userpass")
+
+	testSaveLoad(t, a)
+	testAutoSave(t, a)
+	testFilteredPolicy(t, a)
+	testAddPolicies(t, a)
+	testRemovePolicies(t, a)
+	testUpdatePolicies(t, a)
+	testUpdateFilteredPolicies(t, a)
+}
+
+func TestPoolAdapters(t *testing.T) {
+	a, err := NewAdapterWithPool(&redis.Pool{
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", "127.0.0.1:6379")
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testSaveLoad(t, a)
 	testAutoSave(t, a)
