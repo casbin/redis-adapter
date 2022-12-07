@@ -26,6 +26,10 @@ func main() {
 	// Use the following if you use Redis with a specific user 
 	// a, err := redisadapter.NewAdapterWithUser("tcp", "127.0.0.1:6379", "username", "password")
 
+	// Use the following if you use Redis connections pool
+	// pool := &redis.Pool{}
+	// a, err := redisadapter.NewAdapterWithPool(pool)
+
 	e := casbin.NewEnforcer("examples/rbac_model.conf", a)
 
 	// Load the policy from DB.

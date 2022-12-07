@@ -92,6 +92,18 @@ func NewAdapterWithKey(network string, address string, key string) (*Adapter, er
 	return newAdapter(network, address, key, "", "")
 }
 
+// NewAdapterWithPool is the constructor for Adapter.
+func NewAdapterWithPool(pool *redis.Pool) (*Adapter, error) {
+	a := &Adapter{}
+	a.key = "casbin_rules"
+	a.conn = pool.Get()
+
+	// Call the destructor when the object is released.
+	runtime.SetFinalizer(a, finalizer)
+
+	return a, nil
+}
+
 type Option func(*Adapter)
 
 func NewAdpaterWithOption(options ...Option) (*Adapter, error) {
