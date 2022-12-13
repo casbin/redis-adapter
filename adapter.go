@@ -16,6 +16,7 @@ package redisadapter
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,6 +47,7 @@ type Adapter struct {
 	key        string
 	username   string
 	password   string
+	tlsConfig  *tls.Config
 	conn       redis.Conn
 	isFiltered bool
 }
@@ -56,13 +58,14 @@ func finalizer(a *Adapter) {
 }
 
 func newAdapter(network string, address string, key string,
-	username string, password string) (*Adapter, error) {
+	username string, password string, tlsConfig *tls.Config) (*Adapter, error) {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
 	a.key = key
 	a.username = username
 	a.password = password
+	a.tlsConfig = tlsConfig
 
 	// Open the DB, create it if not existed.
 	err := a.open()
@@ -75,21 +78,26 @@ func newAdapter(network string, address string, key string,
 
 // NewAdapter is the constructor for Adapter.
 func NewAdapter(network string, address string) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", "", "")
+	return newAdapter(network, address, "casbin_rules", "", "", nil)
 }
 
 func NewAdapterWithUser(network string, address string, username string, password string) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", username, password)
+	return newAdapter(network, address, "casbin_rules", username, password, nil)
 }
 
 // NewAdapterWithPassword is the constructor for Adapter.
 func NewAdapterWithPassword(network string, address string, password string) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", "", password)
+	return newAdapter(network, address, "casbin_rules", "", password, nil)
 }
 
 // NewAdapterWithKey is the constructor for Adapter.
 func NewAdapterWithKey(network string, address string, key string) (*Adapter, error) {
-	return newAdapter(network, address, key, "", "")
+	return newAdapter(network, address, key, "", "", nil)
+}
+
+// NewAdapterWithTLS is the constructor for Adapter.
+func NewAdapterWithTLS(network string, address string, tlsConfig *tls.Config) (*Adapter, error) {
+	return newAdapter(network, address, "casbin_rules", "", "", tlsConfig)
 }
 
 // NewAdapterWithPool is the constructor for Adapter.
@@ -149,9 +157,22 @@ func WithKey(key string) Option {
 	}
 }
 
+func WithTLS(tlsConfig *tls.Config) Option {
+	return func(a *Adapter) {
+		a.tlsConfig = tlsConfig
+	}
+}
+
 func (a *Adapter) open() error {
 	//redis.Dial("tcp", "127.0.0.1:6379")
-	if a.username != "" {
+	if a.tlsConfig != nil {
+		// by using DialTLSConfig, we have default timeout of 30s
+		conn, err := redis.Dial(a.network, a.address, redis.DialTLSConfig(a.tlsConfig))
+		if err != nil {
+			return err
+		}
+		a.conn = conn
+	} else if a.username != "" {
 		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password))
 		if err != nil {
 			return err

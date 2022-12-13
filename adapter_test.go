@@ -362,6 +362,10 @@ func TestAdapters(t *testing.T) {
 	// Use the following if you use Redis with a account
 	// a, err := NewAdapterWithUser("tcp", "127.0.0.1:6379", "testaccount", "userpass")
 
+	// User the following if use TLS to connect to redis
+	// var clientTLSConfig tls.Config
+	// a, _ := NewAdapterWithTLS("tcp", "127.0.0.1:6379", &clientTLSConfig)
+
 	testSaveLoad(t, a)
 	testAutoSave(t, a)
 	testFilteredPolicy(t, a)
