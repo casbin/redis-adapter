@@ -354,16 +354,13 @@ func arrayEqualsWithoutOrder(a [][]string, b [][]string) bool {
 }
 
 func TestAdapters(t *testing.T) {
-	a, err := NewAdapter("tcp", "127.0.0.1:6379")
+	a, _ := NewAdapter("tcp", "127.0.0.1:6379")
 
 	// Use the following if Redis has password like "123"
 	// a, err := NewAdapterWithPassword("tcp", "127.0.0.1:6379", "123")
 
 	// Use the following if you use Redis with a account
 	// a, err := NewAdapterWithUser("tcp", "127.0.0.1:6379", "testaccount", "userpass")
-	if err != nil {
-		t.Fatal(err)
-	}
 	testSaveLoad(t, a)
 	testAutoSave(t, a)
 	testFilteredPolicy(t, a)
@@ -374,13 +371,11 @@ func TestAdapters(t *testing.T) {
 }
 
 func TestAdapterWithOption(t *testing.T) {
-	a, err := NewAdapterWithOption(WithNetwork("tcp"), WithAddress("127.0.0.1:6379"))
+	a, _ := NewAdapterWithOption(WithNetwork("tcp"), WithAddress("127.0.0.1:6379"))
 	// User the following if use TLS to connect to redis
 	// var clientTLSConfig tls.Config
-	// a, err := NewAdapterWithOption(WithTLS(&clientTLSConfig))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// a, err := NewAdapterWithOption(WithTls(&clientTLSConfig))
+
 	testSaveLoad(t, a)
 	testAutoSave(t, a)
 	testFilteredPolicy(t, a)
