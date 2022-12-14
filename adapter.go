@@ -58,14 +58,13 @@ func finalizer(a *Adapter) {
 }
 
 func newAdapter(network string, address string, key string,
-	username string, password string, tlsConfig *tls.Config) (*Adapter, error) {
+	username string, password string) (*Adapter, error) {
 	a := &Adapter{}
 	a.network = network
 	a.address = address
 	a.key = key
 	a.username = username
 	a.password = password
-	a.tlsConfig = tlsConfig
 
 	// Open the DB, create it if not existed.
 	err := a.open()
@@ -78,26 +77,21 @@ func newAdapter(network string, address string, key string,
 
 // NewAdapter is the constructor for Adapter.
 func NewAdapter(network string, address string) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", "", "", nil)
+	return newAdapter(network, address, "casbin_rules", "", "")
 }
 
 func NewAdapterWithUser(network string, address string, username string, password string) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", username, password, nil)
+	return newAdapter(network, address, "casbin_rules", username, password)
 }
 
 // NewAdapterWithPassword is the constructor for Adapter.
 func NewAdapterWithPassword(network string, address string, password string) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", "", password, nil)
+	return newAdapter(network, address, "casbin_rules", "", password)
 }
 
 // NewAdapterWithKey is the constructor for Adapter.
 func NewAdapterWithKey(network string, address string, key string) (*Adapter, error) {
-	return newAdapter(network, address, key, "", "", nil)
-}
-
-// NewAdapterWithTLS is the constructor for Adapter.
-func NewAdapterWithTLS(network string, address string, tlsConfig *tls.Config) (*Adapter, error) {
-	return newAdapter(network, address, "casbin_rules", "", "", tlsConfig)
+	return newAdapter(network, address, key, "", "")
 }
 
 // NewAdapterWithPool is the constructor for Adapter.
@@ -114,7 +108,7 @@ func NewAdapterWithPool(pool *redis.Pool) (*Adapter, error) {
 
 type Option func(*Adapter)
 
-func NewAdpaterWithOption(options ...Option) (*Adapter, error) {
+func NewAdapterWithOption(options ...Option) (*Adapter, error) {
 	a := &Adapter{}
 	for _, option := range options {
 		option(a)
@@ -165,29 +159,23 @@ func WithTLS(tlsConfig *tls.Config) Option {
 
 func (a *Adapter) open() error {
 	//redis.Dial("tcp", "127.0.0.1:6379")
-	if a.tlsConfig != nil {
-		// by using DialTLSConfig, we have default timeout of 30s
-		conn, err := redis.Dial(a.network, a.address, redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(true))
-		if err != nil {
-			return err
-		}
-		a.conn = conn
-	} else if a.username != "" {
-		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password))
+	useTLS := a.tlsConfig != nil
+	if a.username != "" {
+		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password), redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(useTLS))
 		if err != nil {
 			return err
 		}
 
 		a.conn = conn
 	} else if a.password == "" {
-		conn, err := redis.Dial(a.network, a.address)
+		conn, err := redis.Dial(a.network, a.address, redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(useTLS))
 		if err != nil {
 			return err
 		}
 
 		a.conn = conn
 	} else {
-		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password))
+		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password), redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(useTLS))
 		if err != nil {
 			return err
 		}
