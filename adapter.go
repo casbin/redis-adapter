@@ -16,6 +16,7 @@ package redisadapter
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,6 +47,7 @@ type Adapter struct {
 	key        string
 	username   string
 	password   string
+	tlsConfig  *tls.Config
 	conn       redis.Conn
 	isFiltered bool
 }
@@ -106,7 +108,7 @@ func NewAdapterWithPool(pool *redis.Pool) (*Adapter, error) {
 
 type Option func(*Adapter)
 
-func NewAdpaterWithOption(options ...Option) (*Adapter, error) {
+func NewAdapterWithOption(options ...Option) (*Adapter, error) {
 	a := &Adapter{}
 	for _, option := range options {
 		option(a)
@@ -149,24 +151,31 @@ func WithKey(key string) Option {
 	}
 }
 
+func WithTls(tlsConfig *tls.Config) Option {
+	return func(a *Adapter) {
+		a.tlsConfig = tlsConfig
+	}
+}
+
 func (a *Adapter) open() error {
 	//redis.Dial("tcp", "127.0.0.1:6379")
+	useTls := a.tlsConfig != nil
 	if a.username != "" {
-		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password))
+		conn, err := redis.Dial(a.network, a.address, redis.DialUsername(a.username), redis.DialPassword(a.password), redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(useTls))
 		if err != nil {
 			return err
 		}
 
 		a.conn = conn
 	} else if a.password == "" {
-		conn, err := redis.Dial(a.network, a.address)
+		conn, err := redis.Dial(a.network, a.address, redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(useTls))
 		if err != nil {
 			return err
 		}
 
 		a.conn = conn
 	} else {
-		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password))
+		conn, err := redis.Dial(a.network, a.address, redis.DialPassword(a.password), redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(useTls))
 		if err != nil {
 			return err
 		}
