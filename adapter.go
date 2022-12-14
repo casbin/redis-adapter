@@ -167,7 +167,7 @@ func (a *Adapter) open() error {
 	//redis.Dial("tcp", "127.0.0.1:6379")
 	if a.tlsConfig != nil {
 		// by using DialTLSConfig, we have default timeout of 30s
-		conn, err := redis.Dial(a.network, a.address, redis.DialTLSConfig(a.tlsConfig))
+		conn, err := redis.Dial(a.network, a.address, redis.DialTLSConfig(a.tlsConfig), redis.DialUseTLS(true))
 		if err != nil {
 			return err
 		}
