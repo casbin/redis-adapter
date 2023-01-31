@@ -13,7 +13,7 @@ package main
 
 import (
 	"github.com/casbin/casbin/v2"
-	"github.com/casbin/redis-adapter/v2"
+	"github.com/casbin/redis-adapter/v3"
 )
 
 func main() {
@@ -30,17 +30,17 @@ func main() {
 	// Use the following if you use Redis connections pool
 	// pool := &redis.Pool{}
 	// a, err := redisadapter.NewAdapterWithPool(pool)
-	
+
 	// Initialization with different user options:
 	// Use the following if you use Redis with passowrd like "123":
 	// a, err := redisadapter.NewAdapterWithOption(redisadapter.WithNetwork("tcp"), redisadapter.WithAddress("127.0.0.1:6379"), redisadapter.WithPassword("123"))
-	
+
 	// Use the following if you use Redis with username, password, and TLS option:
 	// var clientTLSConfig tls.Config
 	// ...
 	// a, err := redisadapter.NewAdapterWithOption(redisadapter.WithNetwork("tcp"), redisadapter.WithAddress("127.0.0.1:6379"), redisadapter.WithUsername("testAccount"), redisadapter.WithPassword("123456"), redisadapter.WithTls(&clientTLSConfig))
 
-	e := casbin.NewEnforcer("examples/rbac_model.conf", a)
+	e, _ := casbin.NewEnforcer("examples/rbac_model.conf", a)
 
 	// Load the policy from DB.
 	e.LoadPolicy()
