@@ -1,4 +1,13 @@
-# Redis Adapter [![Go](https://github.com/casbin/redis-adapter/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/redis-adapter/actions/workflows/ci.yml) [![Coverage Status](https://coveralls.io/repos/github/casbin/redis-adapter/badge.svg?branch=master)](https://coveralls.io/github/casbin/redis-adapter?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/casbin/redis-adapter)](https://goreportcard.com/report/github.com/casbin/redis-adapter) [![Godoc](https://godoc.org/github.com/casbin/redis-adapter?status.svg)](https://godoc.org/github.com/casbin/redis-adapter)
+Redis Adapter
+====
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/casbin/redis-adapter)](https://goreportcard.com/report/github.com/casbin/redis-adapter)
+[![Build](https://github.com/casbin/redis-adapter/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/redis-adapter/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/casbin/redis-adapter/badge.svg?branch=master)](https://coveralls.io/github/casbin/redis-adapter?branch=master)
+[![Godoc](https://godoc.org/github.com/casbin/redis-adapter?status.svg)](https://pkg.go.dev/github.com/casbin/redis-adapter/v3)
+[![Release](https://img.shields.io/github/release/casbin/redis-adapter.svg)](https://github.com/casbin/redis-adapter/releases/latest)
+[![Discord](https://img.shields.io/discord/1022748306096537660?logo=discord&label=discord&color=5865F2)](https://discord.gg/S5UjpzGZjN)
+[![Sourcegraph](https://sourcegraph.com/github.com/casbin/redis-adapter/-/badge.svg)](https://sourcegraph.com/github.com/casbin/redis-adapter?badge)
 
 Redis Adapter is the [Redis](https://redis.io/) adapter for [Casbin](https://github.com/casbin/casbin). With this library, Casbin can load policy from Redis or save policy to it.
 
