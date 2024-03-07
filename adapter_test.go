@@ -403,3 +403,22 @@ func TestPoolAdapters(t *testing.T) {
 	testUpdatePolicies(t, a)
 	testUpdateFilteredPolicies(t, a)
 }
+
+func TestPoolAndOptionsAdapters(t *testing.T) {
+	a, err := NewAdapterWithPoolAndOptions(&redis.Pool{
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", "127.0.0.1:6379")
+		},
+	}, WithKey("casbin:policy:test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testSaveLoad(t, a)
+	testAutoSave(t, a)
+	testFilteredPolicy(t, a)
+	testAddPolicies(t, a)
+	testRemovePolicies(t, a)
+	testUpdatePolicies(t, a)
+	testUpdateFilteredPolicies(t, a)
+}
