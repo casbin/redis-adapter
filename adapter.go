@@ -303,7 +303,12 @@ func (a *Adapter) LoadPolicy(model model.Model) error {
 	for _, value := range values {
 		text, ok := value.([]byte)
 		if !ok {
-			return errors.New("the type is wrong")
+			// Amazon MemoryDB for Redis returns string instead of []byte
+			if textStr, ok := value.(string); ok {
+				text = []byte(textStr)
+			} else {
+				return errors.New("the type is wrong")
+			}
 		}
 		err = json.Unmarshal(text, &line)
 		if err != nil {
@@ -545,7 +550,12 @@ func (a *Adapter) loadFilteredPolicy(model model.Model, filter *Filter) error {
 	for _, value := range values {
 		text, ok := value.([]byte)
 		if !ok {
-			return errors.New("the type is wrong")
+			// Amazon MemoryDB for Redis returns string instead of []byte
+			if textStr, ok := value.(string); ok {
+				text = []byte(textStr)
+			} else {
+				return errors.New("the type is wrong")
+			}
 		}
 
 		if !re.Match(text) {
